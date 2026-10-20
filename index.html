@@ -143,7 +143,7 @@ textarea.inp{width:100%;min-height:90px;resize:vertical;line-height:1.55}
 <script>
 'use strict';
 const VER='v1.7';
-const SEEDUA='2026-10-14T01:00:00.000Z',SEEDV=9,HISTUA='2026-10-19T00:00:00.000Z';
+const SEEDUA='2026-10-14T01:00:00.000Z',SEEDV=10,HISTUA='2026-10-19T00:00:00.000Z';
 const SB='https://ebthltdmxpzlkfwvdloz.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVidGhsdGRteHB6bGtmd3ZkbG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTcxNTQsImV4cCI6MjA5MDczMzE1NH0.bXqNpOtDMCFjuZROrIDm_3o0kHmNESs7EHOgGnFCxAM';
 const KS='tj_training_scan_v1|',KN='tj_training_ntfy_v1',FN=SB+'/functions/v1/training-notify';
@@ -402,7 +402,7 @@ function seed(){
   const att=[],seen={};
   String(x.att||'').split(/,\s*/).forEach(t=>{const m=t.trim().match(/^(.+?)\s*\((.*)\)$/),n=(m?m[1]:t).trim();if(n&&!seen[n]){seen[n]=1;att.push({n,d:m?m[2]:'',p:''})}});
   const ev=String(x.ev||'');
-  reports.push(R({k:'a'+String(i).padStart(3,'0'),arc:1,kind:x.k,planId:x.p||'',title:x.t,wd:x.d||String(x.y),d1:x.d||'',hrs:'',
+  reports.push(R({k:'a'+String(i).padStart(3,'0'),arc:1,kind:x.k,planId:x.p||'',title:x.t,wd:x.d||String(x.y),d1:x.d||'',hrs:1,
    place:x.k==='사내'?x.pl||'':'',inst:x.k==='사외'?x.pl||'':'',lec:x.k==='사내'?x.lec||'':'',
    body:(x.b||'')+'\n\n[원본 파일] '+(x.f||'-')+(x.x?'\n'+x.x:''),att,cnt:x.n&&+x.n!==att.length?+x.n:null,
    ev:{m:Object.keys(EVK).filter(t=>ev.includes(t)).map(t=>EVK[t]),r:'효과있음',d:x.d||String(x.y),by:'',note:'평가완료'+(ev?' · 원본 '+ev:'')},ap:{w:'',r:'',a:''},ua:HISTUA}));
@@ -469,11 +469,12 @@ function ensureAdhoc(){
   if(!DB.plans.some(p=>p.id===id))DB.plans.push(adhocFor(r));r.planId=id;r.ua=now();ch=true});
  return ch;
 }
-/* 2026-10-20 이전 교육은 유효성평가 완료로 일괄 정리 (확인일 미기재 시 작성일/교육일) */
+/* 2026-10-20 이전 교육은 유효성평가 완료로 일괄 정리 (확인일 미기재 시 작성일/교육일) · 정리본 이관 보고서는 교육시간 미기재 시 1시간 */
 const EVCUT='2026-10-20';
 function evFix(){
  let ch=false;
- DB.reports.forEach(r=>{const b=r.d2||r.d1;if(!b||b>=EVCUT||evDone(r))return;
+ DB.reports.forEach(r=>{if(r.arc&&!r.hrs){r.hrs=1;r.ua=now();ch=true}
+  const b=r.d2||r.d1;if(!b||b>=EVCUT||evDone(r))return;
   const e=r.ev||{};r.ev={m:e.m||[],r:e.r||'효과있음',d:e.d||(r.wd&&r.wd>b?r.wd:b),by:e.by||'',note:e.note||'평가완료(지난 교육 일괄 정리)'};r.ua=now();ch=true});
  return ch;
 }
